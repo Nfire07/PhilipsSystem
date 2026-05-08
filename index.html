@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Philips Hue Controller</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 flex items-center justify-center h-screen m-0">
+
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-[350px] h-[580px] flex flex-col border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-800 text-center mb-6">Hue Panel</h2>
+
+        <div class="mb-6 pb-4 border-b border-slate-100">
+            <button onclick="callApi('/getLamps')" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                Scan Lamps
+            </button>
+        </div>
+
+        <div class="mb-6 pb-4 border-b border-slate-100">
+            <label class="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">Lamp ID</label>
+            <input type="number" id="lampId" value="3" 
+                   class="w-full p-2 mb-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+            <div class="flex gap-2">
+                <button onclick="toggle(true)" 
+                        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 rounded-lg transition shadow-sm">
+                    ON
+                </button>
+                <button onclick="toggle(false)" 
+                        class="flex-1 bg-slate-500 hover:bg-slate-600 text-white font-bold py-2 rounded-lg transition shadow-sm">
+                    OFF
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">Pick Color</label>
+            <div class="flex gap-2 items-center">
+                <input type="color" id="colorPicker" value="#ffffff" onchange="updateHex()" 
+                       class="w-12 h-10 border-none bg-transparent cursor-pointer">
+                <button id="hexBtn" onclick="setHex()" 
+                        class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg transition shadow-md">
+                    Set Color
+                </button>
+            </div>
+        </div>
+
+        <label class="block text-xs font-black uppercase tracking-wider text-slate-500 mt-2 mb-1">Response</label>
+        <div id="response" 
+             class="bg-slate-900 text-emerald-400 p-3 rounded-lg font-mono text-[0.75rem] flex-grow overflow-y-auto whitespace-pre-wrap break-all border border-slate-800 shadow-inner">
+            Ready.
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = 'http://localhost:8080';
+
+        async function callApi(endpoint) {
+            const resDiv = document.getElementById('response');
+            resDiv.innerText = "Requesting...";
+            try {
+                const response = await fetch(BASE_URL + endpoint);
+                const data = await response.json();
+                resDiv.innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resDiv.innerText = "Error: Connection/CORS issue.\n" + error;
+            }
+        }
+
+        function toggle(state) {
+            const id = document.getElementById('lampId').value;
+            callApi(`/toggle?id=${id}&on=${state}`);
+        }
+
+        function setHex() {
+            const id = document.getElementById('lampId').value;
+            const hex = document.getElementById('colorPicker').value.replace('#', '');
+            callApi(`/setHex?id=${id}&color=${hex}`);
+        }
+
+        function updateHex() {
+            const hex = document.getElementById('colorPicker').value;
+            document.getElementById('hexBtn').innerText = `Set ${hex.toUpperCase()}`;
+        }
+    </script>
+
+</body>
+</html>
